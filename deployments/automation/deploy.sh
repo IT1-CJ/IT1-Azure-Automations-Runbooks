@@ -43,6 +43,66 @@ for VAR in SUBSCRIPTION_ID RESOURCE_GROUP LOCATION AUTOMATION_ACCOUNT VM_NAME VM
   fi
 done
 
+# ---------------------------------------------------------------------------
+# Auto-detect timezone from Azure region
+# ---------------------------------------------------------------------------
+detect_timezone() {
+  local REGION="$1"
+  case "$REGION" in
+    # United States
+    eastus|eastus2)                   echo "America/New_York" ;;
+    northcentralus|southcentralus)    echo "America/Chicago" ;;
+    centralus|westcentralus)          echo "America/Chicago" ;;
+    westus|westus2|westus3)           echo "America/Los_Angeles" ;;
+    # Canada
+    canadacentral)                    echo "America/Toronto" ;;
+    canadaeast)                       echo "America/Halifax" ;;
+    # Europe
+    uksouth|ukwest)                   echo "Europe/London" ;;
+    northeurope)                      echo "Europe/Dublin" ;;
+    westeurope)                       echo "Europe/Amsterdam" ;;
+    germanywestcentral)               echo "Europe/Berlin" ;;
+    francecentral|francesouth)        echo "Europe/Paris" ;;
+    switzerlandnorth|switzerlandwest) echo "Europe/Zurich" ;;
+    norwayeast|norwaywest)            echo "Europe/Oslo" ;;
+    swedencentral)                    echo "Europe/Stockholm" ;;
+    polandcentral)                    echo "Europe/Warsaw" ;;
+    italynorth)                       echo "Europe/Rome" ;;
+    spaincentral)                     echo "Europe/Madrid" ;;
+    # Asia Pacific
+    eastasia)                         echo "Asia/Hong_Kong" ;;
+    southeastasia)                    echo "Asia/Singapore" ;;
+    japaneast|japanwest)              echo "Asia/Tokyo" ;;
+    koreacentral|koreasouth)          echo "Asia/Seoul" ;;
+    centralindia|southindia|westindia|jioindiawest|jioindiacentral) echo "Asia/Kolkata" ;;
+    australiaeast|australiasoutheast) echo "Australia/Sydney" ;;
+    australiacentral|australiacentral2) echo "Australia/Darwin" ;;
+    newzealandnorth)                  echo "Pacific/Auckland" ;;
+    # Middle East & Africa
+    uaenorth|uaecentral)              echo "Asia/Dubai" ;;
+    southafricanorth|southafricawest) echo "Africa/Johannesburg" ;;
+    israelcentral)                    echo "Asia/Jerusalem" ;;
+    qatarcentral)                     echo "Asia/Qatar" ;;
+    # South America
+    brazilsouth|brazilsoutheast)      echo "America/Sao_Paulo" ;;
+    # Fallback
+    *)                                echo "" ;;
+  esac
+}
+
+if [[ "$TIMEZONE" == "auto" ]]; then
+  echo "==> Detecting timezone from region: $LOCATION..."
+  DETECTED_TZ=$(detect_timezone "$LOCATION")
+  if [[ -n "$DETECTED_TZ" ]]; then
+    TIMEZONE="$DETECTED_TZ"
+    echo "    Detected: $TIMEZONE"
+  else
+    echo "    WARNING: Region '$LOCATION' not recognized. Defaulting to UTC."
+    echo "    You can set TIMEZONE manually in config.env."
+    TIMEZONE="UTC"
+  fi
+fi
+
 echo ""
 echo "============================================="
 echo " DEPLOYMENT CONFIG"
