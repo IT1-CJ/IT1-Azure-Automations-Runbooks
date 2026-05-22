@@ -17,11 +17,15 @@ Repeatable deployment scripts and PowerShell runbooks for Azure Automation.
 
 ```
 deployments/automation/
-├── 01-create-automation-account.sh   # Creates Automation Account + managed identity
-├── 02-deploy-reboot-runbook.sh       # Uploads and publishes the runbook (self-contained)
-├── 03-create-reboot-schedule.sh      # Imports modules + creates Wednesday 11pm schedule
+├── config.env    ← Edit this with customer values (one file, one time)
+├── deploy.sh     ← Run this — does everything in sequence
+│
+│   (individual steps — kept for reference or re-running a single step)
+├── 01-create-automation-account.sh
+├── 02-deploy-reboot-runbook.sh
+├── 03-create-reboot-schedule.sh
 └── runbook-source/
-    └── Restart-ManagedVM.ps1         # PowerShell runbook — restarts a VM by name
+    └── Restart-ManagedVM.ps1
 ```
 
 #### Prerequisites
@@ -32,43 +36,28 @@ deployments/automation/
 
 #### Deployment steps
 
-**1. Set your variables**
-
-Open each script and fill in the variables block at the top:
+**1. Clone and navigate**
 
 ```bash
-SUBSCRIPTION_ID="<your-subscription-id>"
-RESOURCE_GROUP="<your-resource-group>"
-LOCATION="eastus"
-AUTOMATION_ACCOUNT="<your-automation-account-name>"
+git clone https://github.com/IT1-CJ/IT1-Azure-Automations-Runbooks.git
+cd IT1-Azure-Automations-Runbooks/deployments/automation
 ```
 
-**2. Create the Automation Account**
+**2. Edit config.env — the only file you touch**
 
 ```bash
-chmod +x deployments/automation/01-create-automation-account.sh
-./deployments/automation/01-create-automation-account.sh
+nano config.env
 ```
 
-This creates the Automation Account with a system-assigned managed identity and grants it **Virtual Machine Contributor** on the resource group.
+Fill in your 7 values, save with Ctrl+O → Enter → Ctrl+X.
 
-**3. Deploy the runbook**
+**3. Run deploy.sh — does everything**
 
 ```bash
-chmod +x deployments/automation/02-deploy-reboot-runbook.sh
-./deployments/automation/02-deploy-reboot-runbook.sh
+chmod +x deploy.sh && ./deploy.sh
 ```
 
-This uploads and publishes `Restart-ManagedVM.ps1` to the Automation Account.
-
-**4. Create the schedule**
-
-```bash
-chmod +x deployments/automation/03-create-reboot-schedule.sh
-./deployments/automation/03-create-reboot-schedule.sh
-```
-
-This imports `Az.Accounts` and `Az.Compute` modules, creates a weekly Wednesday 11pm schedule, and links it to the runbook with your VM as the target.
+That's it. The script runs all 3 steps in sequence, shows progress, and prints a final verification summary.
 
 #### Trigger a reboot manually
 
