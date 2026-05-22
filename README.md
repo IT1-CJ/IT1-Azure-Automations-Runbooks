@@ -18,7 +18,8 @@ Repeatable deployment scripts and PowerShell runbooks for Azure Automation.
 ```
 deployments/automation/
 ├── 01-create-automation-account.sh   # Creates Automation Account + managed identity
-├── 02-deploy-reboot-runbook.sh       # Uploads and publishes the runbook
+├── 02-deploy-reboot-runbook.sh       # Uploads and publishes the runbook (self-contained)
+├── 03-create-reboot-schedule.sh      # Imports modules + creates Wednesday 11pm schedule
 └── runbook-source/
     └── Restart-ManagedVM.ps1         # PowerShell runbook — restarts a VM by name
 ```
@@ -59,6 +60,15 @@ chmod +x deployments/automation/02-deploy-reboot-runbook.sh
 ```
 
 This uploads and publishes `Restart-ManagedVM.ps1` to the Automation Account.
+
+**4. Create the schedule**
+
+```bash
+chmod +x deployments/automation/03-create-reboot-schedule.sh
+./deployments/automation/03-create-reboot-schedule.sh
+```
+
+This imports `Az.Accounts` and `Az.Compute` modules, creates a weekly Wednesday 11pm schedule, and links it to the runbook with your VM as the target.
 
 #### Trigger a reboot manually
 
