@@ -22,6 +22,10 @@ ROLE="Virtual Machine Contributor"
 
 set -euo pipefail
 
+# Auto-install the automation extension without prompting
+az config set extension.dynamic_install_allow_preview=true --only-show-errors
+az extension add --name automation --yes --only-show-errors 2>/dev/null || true
+
 echo "==> Setting active subscription..."
 az account set --subscription "$SUBSCRIPTION_ID"
 
@@ -68,4 +72,36 @@ echo "  Resource Group : $RESOURCE_GROUP"
 echo "  Location       : $LOCATION"
 echo "  Identity       : $PRINCIPAL_ID"
 echo ""
-echo "Next step: run 02-deploy-reboot-runbook.sh"
+
+# ---------------------------------------------------------------------------
+# VERIFICATION — confirm every step landed correctly
+# ---------------------------------------------------------------------------
+echo "============================================="
+echo " VERIFICATION SUMMARY"
+echo "============================================="
+
+echo ""
+echo "[1/3] Resource Group..."
+az group show --name "$RESOURCE_GROUP" --query "{Name:name, Location:location, State:properties.provisioningState}" -o table
+
+echo ""
+echo "[2/3] Automation Account..."
+az automation account show \
+  --name "$AUTOMATION_ACCOUNT" \
+  --resource-group "$RESOURCE_GROUP" \
+  --query "{Name:name, State:properties.state, SKU:sku.name, Identity:identity.type}" \
+  -o table
+
+echo ""
+echo "[3/3] Role Assignment (managed identity → VM Contributor)..."
+az role assignment list \
+  --assignee "$PRINCIPAL_ID" \
+  --role "$ROLE" \
+  --scope "$RG_SCOPE" \
+  --query "[].{Role:roleDefinitionName, Scope:scope, State:condition}" \
+  -o table
+
+echo ""
+echo "============================================="
+echo " All steps verified. Next: run 02-deploy-reboot-runbook.sh"
+echo "============================================="
